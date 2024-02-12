@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
+from tenacity import retry, retry_if_exception_type, stop_after_attempt
 from datetime import timedelta
 import logging
 from typing import Final
@@ -84,6 +85,7 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
             sw_version=self.data.get("VERSION"),
         )
 
+    @retry(retry=retry_if_exception_type(TimeoutError), stop=stop_after_attempt(3))
     async def _async_update_data(self) -> OrderedDict[str, str]:
         """Fetch the latest status from APCUPSd.
 
